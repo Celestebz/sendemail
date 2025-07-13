@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* 自定义样式 */
+.ant-layout {
+  min-height: 100vh;
+}
+
+.ant-layout-header {
+  background: #001529;
+  padding: 0 24px;
+}
+
+.ant-layout-sider {
+  background: #001529;
+}
+
+.ant-layout-content {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.logo {
+  height: 32px;
+  margin: 16px;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 32px;
+}
+
+.site-layout-background {
+  background: #fff;
+}
+
+.page-header {
+  background: #fff;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.content-card {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card {
+  text-align: center;
+  padding: 24px;
+}
+
+.stats-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.stats-label {
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+.success-rate {
+  color: #52c41a;
+}
+
+.failed-rate {
+  color: #ff4d4f;
+} 
