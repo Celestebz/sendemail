@@ -14,10 +14,58 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB限制
+    fileSize: 10 * 1024 * 1024, // 10MB文件大小限制
+    fieldSize: 10 * 1024 * 1024  // 10MB字段大小限制（用于富文本内容）
+  }
+});
+
+// 配置图片上传（用于富文本编辑器）
+const imageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/images/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const imageUpload = multer({
+  storage: imageStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB限制
+  },
+  fileFilter: (req, file, cb) => {
+    // 只允许图片格式
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('只允许上传图片文件'));
+    }
+  }
+});
+
+// 上传图片（用于富文本编辑器）- 必须放在其他路由之前
+router.post('/upload-image', imageUpload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: '没有上传文件' });
+    }
+
+    // 返回图片URL
+    const imageUrl = `/uploads/images/${req.file.filename}`;
+    res.json({
+      success: true,
+      data: {
+        url: imageUrl,
+        filename: req.file.originalname
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -164,12 +212,12 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/preview', async (req, res) => {
   try {
     const { customerData } = req.body;
-    
+
     const template = await dbOperations.get(
       'SELECT * FROM email_templates WHERE id = ?',
       [req.params.id]
     );
-    
+
     if (!template) {
       return res.status(404).json({ success: false, error: '模板不存在' });
     }
@@ -193,8 +241,8 @@ router.post('/:id/preview', async (req, res) => {
       });
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       data: {
         subject: previewSubject,
         content: previewContent,

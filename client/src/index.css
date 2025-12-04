@@ -90,4 +90,23 @@ code {
 
 .failed-rate {
   color: #ff4d4f;
+}
+
+/* 模板预览内容样式 */
+.preview-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.preview-content p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.preview-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 } 

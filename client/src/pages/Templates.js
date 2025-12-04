@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Card, Button, Table, Modal, Form, Input, message, Space, Upload, Popconfirm, Tag, Row, Col, Statistic
+  Card, Button, Table, Modal, Form, Input, message, Space, Upload, Popconfirm
 } from 'antd';
 import {
-  PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, FileTextOutlined, EyeOutlined
+  PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, EyeOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
-
-const { TextArea } = Input;
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const Templates = () => {
   const [templates, setTemplates] = useState([]);
@@ -18,6 +18,71 @@ const Templates = () => {
   const [form] = Form.useForm();
   const [previewData, setPreviewData] = useState({});
   const [attachments, setAttachments] = useState([]);
+  const [editorContent, setEditorContent] = useState('');
+  const quillRef = useRef(null);
+
+  // 富文本编辑器图片上传处理
+  const imageHandler = () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (file) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+          const response = await axios.post('/api/templates/upload-image', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+
+          const imageUrl = response.data.data.url;
+
+          // 安全地获取编辑器实例
+          if (quillRef.current) {
+            const quill = quillRef.current.getEditor();
+            const range = quill.getSelection(true);
+            if (range) {
+              quill.insertEmbed(range.index, 'image', imageUrl);
+              quill.setSelection(range.index + 1);
+            }
+          }
+        } catch (error) {
+          message.error('图片上传失败');
+        }
+      }
+    };
+  };
+
+  // 富文本编辑器配置 - 使用 useMemo 避免重复创建
+  const modules = React.useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
+      }
+    }
+  }), []);
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'color', 'background',
+    'list', 'bullet',
+    'align',
+    'link', 'image'
+  ];
 
   useEffect(() => {
     fetchTemplates();
@@ -38,13 +103,18 @@ const Templates = () => {
   const handleAdd = () => {
     setEditingTemplate(null);
     setAttachments([]);
+    setEditorContent('');
     form.resetFields();
     setModalVisible(true);
   };
 
   const handleEdit = (record) => {
     setEditingTemplate(record);
-    form.setFieldsValue({ ...record });
+    form.setFieldsValue({
+      name: record.name,
+      subject: record.subject
+    });
+    setEditorContent(record.content || '');
     setAttachments(
       record.attachments
         ? JSON.parse(record.attachments).map((file, idx) => ({
@@ -72,12 +142,18 @@ const Templates = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      
+
+      // 验证富文本内容
+      if (!editorContent || editorContent.trim() === '<p><br></p>' || editorContent.trim() === '') {
+        message.error('请输入邮件正文');
+        return;
+      }
+
       // 准备FormData
       const formData = new FormData();
       formData.append('name', values.name);
       formData.append('subject', values.subject);
-      formData.append('content', values.content);
+      formData.append('content', editorContent);
       
    // 只保留当前 attachments 里的现有文件
 const existingFiles = attachments.filter(file => !file.originFileObj && file.url);
@@ -204,7 +280,7 @@ attachments.forEach(file => {
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
-        width={600}
+        width={900}
       >
         <Form
           form={form}
@@ -227,11 +303,20 @@ attachments.forEach(file => {
           </Form.Item>
           <Form.Item
             label="正文内容"
-            name="content"
-            rules={[{ required: true, message: '请输入邮件正文' }]}
             extra="可用变量：{{客户姓名}}、{{公司名称}}、{{邮箱}}、{{电话}}"
           >
-            <TextArea rows={6} placeholder="请输入邮件正文，可用变量如：{{客户姓名}}" />
+            <div style={{ marginBottom: '80px' }}>
+              <ReactQuill
+                ref={quillRef}
+                theme="snow"
+                value={editorContent}
+                onChange={setEditorContent}
+                modules={modules}
+                formats={formats}
+                placeholder="请输入邮件正文，可用变量如：{{客户姓名}}，点击工具栏图片按钮可插入图片"
+                style={{ height: '450px' }}
+              />
+            </div>
           </Form.Item>
           <Form.Item label="附件" name="attachments">
             <Upload 
@@ -262,13 +347,25 @@ attachments.forEach(file => {
         open={previewVisible}
         onCancel={() => setPreviewVisible(false)}
         footer={null}
-        width={600}
+        width={900}
       >
         <Card>
           <h3>主题：</h3>
           <div>{previewData.subject}</div>
           <h3 style={{ marginTop: 16 }}>正文：</h3>
-          <div style={{ whiteSpace: 'pre-wrap' }}>{previewData.content}</div>
+          <div
+            style={{
+              border: '1px solid #d9d9d9',
+              padding: '12px',
+              borderRadius: '4px',
+              minHeight: '100px',
+              maxHeight: '600px',
+              overflow: 'auto',
+              backgroundColor: '#fafafa'
+            }}
+            className="preview-content"
+            dangerouslySetInnerHTML={{ __html: previewData.content }}
+          />
           {previewData.attachments && previewData.attachments.length > 0 && (
             <div style={{ marginTop: 16 }}>
               <h3>附件：</h3>

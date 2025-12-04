@@ -27,6 +27,12 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// 确保图片上传目录存在
+const imagesDir = path.join(__dirname, 'uploads', 'images');
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true });
+}
+
 // 路由
 app.use('/api/email', emailRoutes);
 app.use('/api/customers', customerRoutes);

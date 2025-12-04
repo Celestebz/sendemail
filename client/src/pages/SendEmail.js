@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card, Button, Table, Modal, Form, Select, message, Space, Tag, Checkbox, Row, Col, Spin
+  Card, Button, Table, Modal, Select, message, Space, Tag, Row, Col, Spin
 } from 'antd';
-import { MailOutlined, EyeOutlined, SendOutlined } from '@ant-design/icons';
+import { EyeOutlined, SendOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 const { Option } = Select;
@@ -202,17 +202,44 @@ const SendEmail = () => {
         title="批量邮件预览"
         open={previewVisible}
         onCancel={() => setPreviewVisible(false)}
-        footer={null}
-        width={700}
+        footer={[
+          <Button key="cancel" onClick={() => setPreviewVisible(false)}>
+            取消
+          </Button>,
+          <Button
+            key="send"
+            type="primary"
+            icon={<SendOutlined />}
+            loading={sending}
+            onClick={handleSend}
+          >
+            确认发送
+          </Button>
+        ]}
+        width={1000}
       >
         <Spin spinning={loading}>
           {previewList.map((item, idx) => (
             <Card key={idx} style={{ marginBottom: 16 }}>
               <div><b>收件人：</b>{item.customer.name} ({item.customer.email})</div>
-              <div><b>主题：</b>{item.subject}</div>
-              <div style={{ whiteSpace: 'pre-wrap', margin: '8px 0' }}><b>正文：</b>{item.content}</div>
+              <div style={{ marginTop: 8 }}><b>主题：</b>{item.subject}</div>
+              <div style={{ marginTop: 8 }}><b>正文：</b></div>
+              <div
+                className="preview-content"
+                style={{
+                  border: '1px solid #d9d9d9',
+                  padding: '12px',
+                  borderRadius: '4px',
+                  marginTop: '8px',
+                  minHeight: '100px',
+                  maxHeight: '400px',
+                  overflow: 'auto',
+                  backgroundColor: '#fafafa'
+                }}
+                dangerouslySetInnerHTML={{ __html: item.content }}
+              />
               {item.attachments && item.attachments.length > 0 && (
-                <div><b>附件：</b>{item.attachments.map(f => f.filename).join(', ')}</div>
+                <div style={{ marginTop: 8 }}><b>附件：</b>{item.attachments.map(f => f.filename).join(', ')}</div>
               )}
             </Card>
           ))}

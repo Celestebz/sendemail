@@ -58,82 +58,86 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // 初始化数据库表
 async function initDatabase() {
-  // 邮箱设置表
-  await db.run(`CREATE TABLE IF NOT EXISTS email_settings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    smtp_host TEXT NOT NULL,
-    smtp_port INTEGER NOT NULL,
-    pop_host TEXT,
-    pop_port INTEGER,
-    email TEXT NOT NULL,
-    username TEXT NOT NULL,
-    password TEXT NOT NULL,
-    secure BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+  try {
+    // 邮箱设置表
+    await dbOperations.run(`CREATE TABLE IF NOT EXISTS email_settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      smtp_host TEXT NOT NULL,
+      smtp_port INTEGER NOT NULL,
+      pop_host TEXT,
+      pop_port INTEGER,
+      email TEXT NOT NULL,
+      username TEXT NOT NULL,
+      password TEXT NOT NULL,
+      secure BOOLEAN DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-  // 客户分组表
-  await db.run(`CREATE TABLE IF NOT EXISTS customer_groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
-  )`);
+    // 客户分组表
+    await dbOperations.run(`CREATE TABLE IF NOT EXISTS customer_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE
+    )`);
 
-  // 客户表
-  await db.run(`CREATE TABLE IF NOT EXISTS customers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    company TEXT,
-    phone TEXT,
-    group_id INTEGER NULL,
-    notes TEXT,
-    status TEXT DEFAULT 'active',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (group_id) REFERENCES customer_groups (id)
-  )`);
+    // 客户表
+    await dbOperations.run(`CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      company TEXT,
+      phone TEXT,
+      group_id INTEGER NULL,
+      notes TEXT,
+      status TEXT DEFAULT 'active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (group_id) REFERENCES customer_groups (id)
+    )`);
 
-  // 邮件模板表
-  await db.run(`CREATE TABLE IF NOT EXISTS email_templates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    content TEXT NOT NULL,
-    attachments TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+    // 邮件模板表
+    await dbOperations.run(`CREATE TABLE IF NOT EXISTS email_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      content TEXT NOT NULL,
+      attachments TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-  // 发送记录表
-  await db.run(`CREATE TABLE IF NOT EXISTS send_records (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    customer_id INTEGER NOT NULL,
-    template_id INTEGER NOT NULL,
-    email_subject TEXT NOT NULL,
-    email_content TEXT NOT NULL,
-    status TEXT DEFAULT 'pending',
-    error_message TEXT,
-    sent_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers (id),
-    FOREIGN KEY (template_id) REFERENCES email_templates (id)
-  )`);
+    // 发送记录表
+    await dbOperations.run(`CREATE TABLE IF NOT EXISTS send_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL,
+      template_id INTEGER NOT NULL,
+      email_subject TEXT NOT NULL,
+      email_content TEXT NOT NULL,
+      status TEXT DEFAULT 'pending',
+      error_message TEXT,
+      sent_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES customers (id),
+      FOREIGN KEY (template_id) REFERENCES email_templates (id)
+    )`);
 
-  // 插入默认分组
-  await db.run(`INSERT OR IGNORE INTO customer_groups (id, name) VALUES 
-    (1, '潜在客户'),
-    (2, '现有客户'),
-    (3, 'VIP客户')`);
+    // 插入默认分组
+    await dbOperations.run(`INSERT OR IGNORE INTO customer_groups (id, name) VALUES
+      (1, '潜在客户'),
+      (2, '现有客户'),
+      (3, 'VIP客户')`);
 
-  // 给客户表增加 group_id 字段（如果没有）
-  let columns = await dbOperations.query("PRAGMA table_info(customers)");
-  if (!Array.isArray(columns)) columns = [];
-  if (!columns.some(col => col.name === 'group_id')) {
-    await db.run("ALTER TABLE customers ADD COLUMN group_id INTEGER NULL");
+    // 给客户表增加 group_id 字段（如果没有）
+    let columns = await dbOperations.query("PRAGMA table_info(customers)");
+    if (!Array.isArray(columns)) columns = [];
+    if (!columns.some(col => col.name === 'group_id')) {
+      await dbOperations.run("ALTER TABLE customers ADD COLUMN group_id INTEGER NULL");
+    }
+
+    console.log('✅ 数据库表初始化完成');
+  } catch (error) {
+    console.error('❌ 数据库初始化失败:', error);
   }
-
-  console.log('✅ 数据库表初始化完成');
 }
 
 module.exports = { db, dbOperations };

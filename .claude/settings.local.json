@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(netstat:*)",
+      "Bash(npm run install-all:*)",
+      "Bash(npm run dev:*)",
+      "Bash(echo:*)",
+      "Bash(chmod:*)",
+      "Bash(cat:*)",
+      "Bash(taskkill /F /PID 17900)",
+      "Bash(taskkill /F /PID 2284)",
+      "Bash(taskkill //F //PID 17900)",
+      "Bash(taskkill //F //PID 2284)",
+      "Bash(npm install:*)",
+      "Bash(taskkill /F /PID 10868)",
+      "Bash(taskkill //F //PID 10868)",
+      "Bash(node index.js:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
