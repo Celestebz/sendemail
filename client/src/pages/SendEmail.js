@@ -232,7 +232,7 @@ const SendEmail = () => {
                   borderRadius: '4px',
                   marginTop: '8px',
                   minHeight: '100px',
-                  maxHeight: '400px',
+                  maxHeight: '600px',
                   overflow: 'auto',
                   backgroundColor: '#fafafa'
                 }}
