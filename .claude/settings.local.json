@@ -16,7 +16,14 @@
       "Bash(npm install:*)",
       "Bash(taskkill /F /PID 10868)",
       "Bash(taskkill //F //PID 10868)",
-      "Bash(node index.js:*)"
+      "Bash(node index.js:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: 添加富文本编辑器和启动脚本\n\n- 集成 react-quill 富文本编辑器支持图片和格式化内容\n- 添加模板和邮件预览的 HTML 渲染支持\n- 创建 sendemail.bat 和 sendemail.sh 启动脚本\n- 添加启动说明文档\n- 优化数据库初始化错误处理\n- 添加模板图片上传功能\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: 调整批量邮件预览内容区域高度\n\n- 将批量邮件预览的 maxHeight 从 400px 调整为 600px\n- 与模板预览保持一致的显示高度\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

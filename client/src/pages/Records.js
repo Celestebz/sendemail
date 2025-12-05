@@ -59,7 +59,7 @@ const Records = () => {
 
   const columns = [
     {
-      title: '客户',
+      title: '联系人',
       dataIndex: 'customer_name',
       key: 'customer_name',
     },

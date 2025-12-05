@@ -18,7 +18,7 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // 获取客户数量
+      // 获取联系人数量
       const customersRes = await axios.get('/api/customers');
       const customersCount = customersRes.data.data?.length || 0;
 
@@ -47,7 +47,7 @@ const Dashboard = () => {
 
   const recentColumns = [
     {
-      title: '客户',
+      title: '联系人',
       dataIndex: 'customer_name',
       key: 'customer_name',
     },
@@ -89,7 +89,7 @@ const Dashboard = () => {
         <Col span={6}>
           <Card className="stats-card">
             <Statistic
-              title="客户总数"
+              title="联系人总数"
               value={stats.customers}
               prefix={<UserOutlined />}
               valueStyle={{ color: '#1890ff' }}

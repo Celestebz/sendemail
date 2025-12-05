@@ -228,7 +228,10 @@ router.post('/:id/preview', async (req, res) => {
 
     if (customerData) {
       const variables = {
-        '{{客户姓名}}': customerData.name || '',
+        '{{联系人姓名}}': customerData.name || '',
+        '{{联系人名字}}': customerData.first_name || '',
+        '{{联系人姓氏}}': customerData.last_name || '',
+        '{{客户姓名}}': customerData.name || '', // 向后兼容
         '{{公司名称}}': customerData.company || '',
         '{{邮箱}}': customerData.email || '',
         '{{电话}}': customerData.phone || ''

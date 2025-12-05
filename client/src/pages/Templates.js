@@ -61,7 +61,7 @@ const Templates = () => {
   const modules = React.useMemo(() => ({
     toolbar: {
       container: [
-        [{ 'header': [1, 2, 3, false] }],
+        [{ 'size': ['small', false, 'large', 'huge'] }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'color': [] }, { 'background': [] }],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
@@ -76,7 +76,7 @@ const Templates = () => {
   }), []);
 
   const formats = [
-    'header',
+    'size',
     'bold', 'italic', 'underline', 'strike',
     'color', 'background',
     'list', 'bullet',
@@ -303,7 +303,7 @@ attachments.forEach(file => {
           </Form.Item>
           <Form.Item
             label="正文内容"
-            extra="可用变量：{{客户姓名}}、{{公司名称}}、{{邮箱}}、{{电话}}"
+            extra="可用变量：{{联系人姓氏}}、{{联系人名字}}、{{联系人姓名}}、{{公司名称}}、{{邮箱}}、{{电话}}"
           >
             <div style={{ marginBottom: '80px' }}>
               <ReactQuill
@@ -313,7 +313,7 @@ attachments.forEach(file => {
                 onChange={setEditorContent}
                 modules={modules}
                 formats={formats}
-                placeholder="请输入邮件正文，可用变量如：{{客户姓名}}，点击工具栏图片按钮可插入图片"
+                placeholder="请输入邮件正文，可用变量如：{{联系人姓氏}}、{{联系人名字}}，点击工具栏图片按钮可插入图片"
                 style={{ height: '450px' }}
               />
             </div>

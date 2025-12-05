@@ -62,7 +62,7 @@ const Customers = () => {
       const response = await axios.get('/api/customers', { params });
       setCustomers(response.data.data || []);
     } catch (error) {
-      message.error('获取客户列表失败');
+      message.error('获取联系人列表失败');
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ const Customers = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('/api/customers/groups');
+      const response = await axios.get('/api/groups');
       setGroups([{ id: null, name: '未分组' }, ...(response.data.data || [])]);
     } catch (error) {
       message.error('获取分组列表失败');
@@ -160,18 +160,18 @@ const Customers = () => {
 
   const handleAddGroup = async () => {
     if (!groupModal.name.trim()) return message.warning('分组名称不能为空');
-    await axios.post('/api/customers/groups', { name: groupModal.name });
+    await axios.post('/api/groups', { name: groupModal.name });
     setGroupModal({ open: false, name: '' });
     fetchGroups();
     message.success('分组添加成功');
   };
 
   const handleDeleteGroup = async (id) => {
-    await axios.delete(`/api/customers/groups/${id}`);
+    await axios.delete(`/api/groups/${id}`);
     fetchGroups();
     if (selectedGroup === id) setSelectedGroup(null);
     fetchCustomers(null);
-    message.success('分组已删除，组内客户已移到未分组');
+    message.success('分组已删除，组内联系人已移到未分组');
   };
 
   const columns = [
@@ -232,7 +232,7 @@ const Customers = () => {
             编辑
           </Button>
           <Popconfirm
-            title="确定要删除这个客户吗？"
+            title="确定要删除这个联系人吗？"
             onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
@@ -256,7 +256,7 @@ const Customers = () => {
     <Layout style={{ minHeight: 600, background: '#fff' }}>
       <Sider width={200} style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}>
         <div style={{ padding: '16px 16px 0' }}>
-          <div style={{ marginBottom: 16, fontWeight: 'bold' }}>客户分组</div>
+          <div style={{ marginBottom: 16, fontWeight: 'bold' }}>联系人分组</div>
           <Menu
             mode="inline"
             selectedKeys={[String(selectedGroup)]}
@@ -307,7 +307,7 @@ const Customers = () => {
       <Layout style={{ background: '#fff' }}>
         <Content style={{ padding: '24px 24px 0' }}>
           <div style={{ marginBottom: 24 }}>
-            <h2 style={{ margin: 0, fontWeight: 500 }}>客户管理</h2>
+            <h2 style={{ margin: 0, fontWeight: 500 }}>联系人管理</h2>
           </div>
 
           {/* 统计卡片 */}
@@ -315,7 +315,7 @@ const Customers = () => {
             <Col span={8}>
               <Card className="stats-card" bordered={false}>
                 <Statistic
-                  title="客户总数"
+                  title="联系人总数"
                   value={stats.total}
                   prefix={<UserOutlined />}
                   valueStyle={{ color: '#1890ff' }}
@@ -325,7 +325,7 @@ const Customers = () => {
             <Col span={8}>
               <Card className="stats-card" bordered={false}>
                 <Statistic
-                  title="活跃客户"
+                  title="活跃联系人"
                   value={stats.active}
                   prefix={<UserOutlined />}
                   valueStyle={{ color: '#52c41a' }}
@@ -335,7 +335,7 @@ const Customers = () => {
             <Col span={8}>
               <Card className="stats-card" bordered={false}>
                 <Statistic
-                  title="客户分组"
+                  title="联系人分组"
                   value={stats.groups}
                   prefix={<TeamOutlined />}
                   valueStyle={{ color: '#722ed1' }}
@@ -349,7 +349,7 @@ const Customers = () => {
             <Row gutter={16} align="middle">
               <Col span={6}>
                 <Input.Search
-                  placeholder="搜索客户姓名、邮箱或公司"
+                  placeholder="搜索联系人姓名、邮箱或公司"
                   onSearch={setSearchText}
                   allowClear
                 />
@@ -379,12 +379,12 @@ const Customers = () => {
               </Col>
               <Col span={10}>
                 <Space>
-                  <Button 
-                    type="primary" 
+                  <Button
+                    type="primary"
                     icon={<PlusOutlined />}
                     onClick={handleAdd}
                   >
-                    添加客户
+                    添加联系人
                   </Button>
                   <Upload
                     accept=".xlsx,.xls,.csv"
@@ -392,21 +392,21 @@ const Customers = () => {
                     showUploadList={false}
                   >
                     <Button icon={<UploadOutlined />}>
-                      导入客户
+                      导入联系人
                     </Button>
                   </Upload>
-                  <Button 
+                  <Button
                     icon={<DownloadOutlined />}
                     onClick={handleExport}
                   >
-                    导出客户
+                    导出联系人
                   </Button>
                 </Space>
               </Col>
             </Row>
           </div>
 
-          {/* 客户列表 */}
+          {/* 联系人列表 */}
           <Table
             columns={columns}
             dataSource={customers}
@@ -419,9 +419,9 @@ const Customers = () => {
             }}
           />
 
-          {/* 添加/编辑客户模态框 */}
+          {/* 添加/编辑联系人模态框 */}
           <Modal
-            title={editingCustomer ? '编辑客户' : '添加客户'}
+            title={editingCustomer ? '编辑联系人' : '添加联系人'}
             open={modalVisible}
             onCancel={() => setModalVisible(false)}
             footer={null}
@@ -433,13 +433,22 @@ const Customers = () => {
               onFinish={handleSubmit}
             >
               <Row gutter={16}>
-                <Col span={12}>
+                <Col span={6}>
                   <Form.Item
-                    label="姓名"
-                    name="name"
-                    rules={[{ required: true, message: '请输入客户姓名' }]}
+                    label="名字"
+                    name="first_name"
+                    rules={[{ required: true, message: '请输入名字' }]}
                   >
-                    <Input placeholder="请输入客户姓名" />
+                    <Input placeholder="如：John" />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label="姓氏"
+                    name="last_name"
+                    rules={[{ required: true, message: '请输入姓氏' }]}
+                  >
+                    <Input placeholder="如：Smith" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -455,7 +464,7 @@ const Customers = () => {
                   </Form.Item>
                 </Col>
               </Row>
-              
+
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
@@ -479,7 +488,7 @@ const Customers = () => {
                 label="分组"
                 name="group_id"
               >
-                <Select placeholder="请选择客户分组" allowClear>
+                <Select placeholder="请选择联系人分组" allowClear>
                   {groups.map(group => (
                     <Option key={group.id} value={group.id}>{group.name}</Option>
                   ))}

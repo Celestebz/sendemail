@@ -68,36 +68,65 @@ router.get('/', async (req, res) => {
 
 
 
-// 创建客户
+// 创建联系人
 router.post('/', async (req, res) => {
   try {
-    const { name, email, company, phone, group_id, notes } = req.body;
-    
-    if (!name || !email) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '姓名和邮箱为必填字段' 
+    const { name, first_name, last_name, email, company, phone, group_id, notes } = req.body;
+
+    // 支持新旧两种方式
+    let finalFirstName = first_name;
+    let finalLastName = last_name;
+    let finalName = name;
+
+    // 如果提供了 first_name 和 last_name，组合成 name（英文名习惯：名字 + 空格 + 姓氏）
+    if (first_name || last_name) {
+      const parts = [];
+      if (first_name) parts.push(first_name.trim());
+      if (last_name) parts.push(last_name.trim());
+      finalName = parts.join(' ');
+    } else if (name) {
+      // 如果只提供了 name，拆分为 first_name 和 last_name
+      if (name.includes(' ')) {
+        // 英文名字：空格分隔
+        const nameParts = name.trim().split(/\s+/);
+        if (nameParts.length > 1) {
+          finalLastName = nameParts[nameParts.length - 1];
+          finalFirstName = nameParts.slice(0, -1).join(' ');
+        } else {
+          finalFirstName = nameParts[0];
+        }
+      } else {
+        // 中文名字：第一个字符是姓氏
+        finalLastName = name.charAt(0) || '';
+        finalFirstName = name.slice(1) || '';
+      }
+    }
+
+    if (!finalName || !email) {
+      return res.status(400).json({
+        success: false,
+        error: '姓名和邮箱为必填字段'
       });
     }
 
     // 检查邮箱是否已存在
     const existing = await dbOperations.get('SELECT id FROM customers WHERE email = ?', [email]);
     if (existing) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '该邮箱已存在' 
+      return res.status(400).json({
+        success: false,
+        error: '该邮箱已存在'
       });
     }
 
     const result = await dbOperations.run(
-      `INSERT INTO customers (name, email, company, phone, group_id, notes) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [name, email, company, phone, group_id, notes]
+      `INSERT INTO customers (name, first_name, last_name, email, company, phone, group_id, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [finalName, finalFirstName, finalLastName, email, company, phone, group_id, notes]
     );
 
-    res.json({ 
-      success: true, 
-      message: '客户创建成功',
+    res.json({
+      success: true,
+      message: '联系人创建成功',
       data: { id: result.id }
     });
   } catch (error) {
@@ -105,36 +134,65 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 更新客户
+// 更新联系人
 router.put('/:id', async (req, res) => {
   try {
-    const { name, email, company, phone, group_id, notes, status } = req.body;
-    
-    if (!name || !email) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '姓名和邮箱为必填字段' 
+    const { name, first_name, last_name, email, company, phone, group_id, notes, status } = req.body;
+
+    // 支持新旧两种方式
+    let finalFirstName = first_name;
+    let finalLastName = last_name;
+    let finalName = name;
+
+    // 如果提供了 first_name 和 last_name，组合成 name（英文名习惯：名字 + 空格 + 姓氏）
+    if (first_name || last_name) {
+      const parts = [];
+      if (first_name) parts.push(first_name.trim());
+      if (last_name) parts.push(last_name.trim());
+      finalName = parts.join(' ');
+    } else if (name) {
+      // 如果只提供了 name，拆分为 first_name 和 last_name
+      if (name.includes(' ')) {
+        // 英文名字：空格分隔
+        const nameParts = name.trim().split(/\s+/);
+        if (nameParts.length > 1) {
+          finalLastName = nameParts[nameParts.length - 1];
+          finalFirstName = nameParts.slice(0, -1).join(' ');
+        } else {
+          finalFirstName = nameParts[0];
+        }
+      } else {
+        // 中文名字：第一个字符是姓氏
+        finalLastName = name.charAt(0) || '';
+        finalFirstName = name.slice(1) || '';
+      }
+    }
+
+    if (!finalName || !email) {
+      return res.status(400).json({
+        success: false,
+        error: '姓名和邮箱为必填字段'
       });
     }
 
-    // 检查邮箱是否已被其他客户使用
+    // 检查邮箱是否已被其他联系人使用
     const existing = await dbOperations.get(
-      'SELECT id FROM customers WHERE email = ? AND id != ?', 
+      'SELECT id FROM customers WHERE email = ? AND id != ?',
       [email, req.params.id]
     );
     if (existing) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '该邮箱已被其他客户使用' 
+      return res.status(400).json({
+        success: false,
+        error: '该邮箱已被其他联系人使用'
       });
     }
 
     await dbOperations.run(
-      `UPDATE customers SET 
-       name = ?, email = ?, company = ?, phone = ?, group_id = ?, notes = ?, status = ?, 
-       updated_at = CURRENT_TIMESTAMP 
+      `UPDATE customers SET
+       name = ?, first_name = ?, last_name = ?, email = ?, company = ?, phone = ?, group_id = ?, notes = ?, status = ?,
+       updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
-      [name, email, company, phone, group_id, notes, status, req.params.id]
+      [finalName, finalFirstName, finalLastName, email, company, phone, group_id, notes, status, req.params.id]
     );
 
     res.json({ success: true, message: '客户更新成功' });

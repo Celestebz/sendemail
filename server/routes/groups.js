@@ -26,11 +26,11 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 删除分组（并将该分组下客户的 group_id 置为 NULL）
+// 删除分组（并将该分组下联系人的 group_id 置为 NULL）
 router.delete('/:id', async (req, res) => {
   const groupId = req.params.id;
   try {
-    // 先将该分组下的客户 group_id 置为 NULL
+    // 先将该分组下的联系人 group_id 置为 NULL
     await dbOperations.run('UPDATE customers SET group_id = NULL WHERE group_id = ?', [groupId]);
     // 再删除分组
     await dbOperations.run('DELETE FROM customer_groups WHERE id = ?', [groupId]);

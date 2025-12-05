@@ -74,13 +74,13 @@ async function initDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // 客户分组表
+    // 联系人分组表
     await dbOperations.run(`CREATE TABLE IF NOT EXISTS customer_groups (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE
     )`);
 
-    // 客户表
+    // 联系人表
     await dbOperations.run(`CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -123,15 +123,56 @@ async function initDatabase() {
 
     // 插入默认分组
     await dbOperations.run(`INSERT OR IGNORE INTO customer_groups (id, name) VALUES
-      (1, '潜在客户'),
-      (2, '现有客户'),
-      (3, 'VIP客户')`);
+      (1, '潜在联系人'),
+      (2, '现有联系人'),
+      (3, 'VIP联系人')`);
 
-    // 给客户表增加 group_id 字段（如果没有）
+    // 给联系人表增加 group_id 字段（如果没有）
     let columns = await dbOperations.query("PRAGMA table_info(customers)");
     if (!Array.isArray(columns)) columns = [];
     if (!columns.some(col => col.name === 'group_id')) {
       await dbOperations.run("ALTER TABLE customers ADD COLUMN group_id INTEGER NULL");
+    }
+
+    // 给联系人表增加 first_name 和 last_name 字段（如果没有）
+    columns = await dbOperations.query("PRAGMA table_info(customers)");
+    if (!Array.isArray(columns)) columns = [];
+
+    if (!columns.some(col => col.name === 'first_name')) {
+      await dbOperations.run("ALTER TABLE customers ADD COLUMN first_name TEXT");
+    }
+
+    if (!columns.some(col => col.name === 'last_name')) {
+      await dbOperations.run("ALTER TABLE customers ADD COLUMN last_name TEXT");
+    }
+
+    // 迁移现有数据：将 name 字段拆分为 first_name 和 last_name
+    const existingCustomers = await dbOperations.query("SELECT id, name, first_name, last_name FROM customers WHERE name IS NOT NULL");
+    for (const customer of existingCustomers) {
+      const name = customer.name || '';
+      let firstName = '';
+      let lastName = '';
+
+      // 判断是否包含空格（英文名字）
+      if (name.includes(' ')) {
+        // 英文名字：空格分隔，最后一个词是姓氏
+        const parts = name.trim().split(/\s+/);
+        if (parts.length > 1) {
+          lastName = parts[parts.length - 1]; // 最后一个词是姓氏
+          firstName = parts.slice(0, -1).join(' '); // 其余是名字
+        } else {
+          firstName = parts[0];
+        }
+      } else {
+        // 中文名字：第一个字符是姓氏，其余是名字
+        lastName = name.charAt(0) || '';
+        firstName = name.slice(1) || '';
+      }
+
+      await dbOperations.run(
+        "UPDATE customers SET first_name = ?, last_name = ? WHERE id = ?",
+        [firstName, lastName, customer.id]
+      );
     }
 
     console.log('✅ 数据库表初始化完成');

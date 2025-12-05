@@ -33,7 +33,7 @@ function App() {
     {
       key: '/customers',
       icon: <UserOutlined />,
-      label: '客户管理',
+      label: '联系人管理',
     },
     {
       key: '/templates',

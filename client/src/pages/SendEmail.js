@@ -28,7 +28,7 @@ const SendEmail = () => {
       const response = await axios.get('/api/customers');
       setCustomers(response.data.data || []);
     } catch (error) {
-      message.error('获取客户列表失败');
+      message.error('获取联系人列表失败');
     } finally {
       setLoading(false);
     }
@@ -45,7 +45,7 @@ const SendEmail = () => {
 
   const handlePreview = async () => {
     if (!selectedTemplateId || selectedCustomerIds.length === 0) {
-      message.warning('请选择模板和客户');
+      message.warning('请选择模板和联系人');
       return;
     }
     setLoading(true);
@@ -72,7 +72,7 @@ const SendEmail = () => {
 
   const handleSend = async () => {
     if (!selectedTemplateId || selectedCustomerIds.length === 0) {
-      message.warning('请选择模板和客户');
+      message.warning('请选择模板和联系人');
       return;
     }
     setSending(true);

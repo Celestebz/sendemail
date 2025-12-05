@@ -118,13 +118,19 @@ router.post('/send', async (req, res) => {
         // 变量替换
         let subject = customSubject || template.subject;
         let content = customContent || template.content;
-        
-        subject = subject.replace(/\{\{客户姓名\}\}/g, customer.name)
+
+        subject = subject.replace(/\{\{联系人姓名\}\}/g, customer.name)
+                        .replace(/\{\{联系人名字\}\}/g, customer.first_name || '')
+                        .replace(/\{\{联系人姓氏\}\}/g, customer.last_name || '')
+                        .replace(/\{\{客户姓名\}\}/g, customer.name) // 向后兼容
                         .replace(/\{\{公司名称\}\}/g, customer.company || '')
                         .replace(/\{\{邮箱\}\}/g, customer.email)
                         .replace(/\{\{电话\}\}/g, customer.phone || '');
 
-        content = content.replace(/\{\{客户姓名\}\}/g, customer.name)
+        content = content.replace(/\{\{联系人姓名\}\}/g, customer.name)
+                        .replace(/\{\{联系人名字\}\}/g, customer.first_name || '')
+                        .replace(/\{\{联系人姓氏\}\}/g, customer.last_name || '')
+                        .replace(/\{\{客户姓名\}\}/g, customer.name) // 向后兼容
                         .replace(/\{\{公司名称\}\}/g, customer.company || '')
                         .replace(/\{\{邮箱\}\}/g, customer.email)
                         .replace(/\{\{电话\}\}/g, customer.phone || '');
