@@ -115,7 +115,7 @@ router.post('/', upload.array('attachments', 5), async (req, res) => {
     let attachments = null;
     if (req.files && req.files.length > 0) {
       attachments = req.files.map(file => ({
-        filename: file.originalname,
+        filename: Buffer.from(file.originalname, 'latin1').toString('utf8'),
         path: file.path
       }));
     }
@@ -176,7 +176,7 @@ if (req.body.existingAttachments) {
 // 新上传的附件
 const newAttachments = req.files && req.files.length > 0
   ? req.files.map(file => ({
-      filename: file.originalname,
+      filename: Buffer.from(file.originalname, 'latin1').toString('utf8'),
       path: file.path
     }))
   : [];

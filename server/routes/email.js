@@ -127,13 +127,21 @@ router.post('/send', async (req, res) => {
                         .replace(/\{\{邮箱\}\}/g, customer.email)
                         .replace(/\{\{电话\}\}/g, customer.phone || '');
 
+        // 内容变量替换
         content = content.replace(/\{\{联系人姓名\}\}/g, customer.name)
-                        .replace(/\{\{联系人名字\}\}/g, customer.first_name || '')
-                        .replace(/\{\{联系人姓氏\}\}/g, customer.last_name || '')
-                        .replace(/\{\{客户姓名\}\}/g, customer.name) // 向后兼容
-                        .replace(/\{\{公司名称\}\}/g, customer.company || '')
-                        .replace(/\{\{邮箱\}\}/g, customer.email)
-                        .replace(/\{\{电话\}\}/g, customer.phone || '');
+                         .replace(/\{\{联系人名字\}\}/g, customer.first_name || '')
+                         .replace(/\{\{联系人姓氏\}\}/g, customer.last_name || '')
+                         .replace(/\{\{客户姓名\}\}/g, customer.name)
+                         .replace(/\{\{公司名称\}\}/g, customer.company || '')
+                         .replace(/\{\{邮箱\}\}/g, customer.email)
+                         .replace(/\{\{电话\}\}/g, customer.phone || '');
+
+        // 统一段落间距：为无样式的 <p> 注入内联样式，避免不同客户端默认 margin 不一致
+        const normalizeParagraphs = (html) => {
+          if (!html || typeof html !== 'string') return html;
+          return html.replace(/<p(?![^>]*style=)([^>]*)>/g, '<p style="margin:8px 0; line-height:1.6;"$1>');
+        };
+        content = normalizeParagraphs(content);
 
         // 将HTML中的图片转换为base64格式
         content = convertImagesToBase64(content, path.join(__dirname, '..'));
@@ -144,8 +152,7 @@ router.post('/send', async (req, res) => {
           const attachmentFiles = JSON.parse(template.attachments);
           attachments = attachmentFiles.map(file => ({
             filename: file.filename,
-            path: file.path,
-            contentDisposition: `attachment; filename="${file.filename}"; filename*=UTF-8''${encodeURIComponent(file.filename)}`
+            path: file.path
           }));
         }
 

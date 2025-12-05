@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card, Button, Table, Modal, Form, Input, message, Space, Upload, Popconfirm
 } from 'antd';
@@ -7,6 +7,7 @@ import {
 } from '@ant-design/icons';
 import axios from 'axios';
 import ReactQuill from 'react-quill';
+import Quill from 'quill';
 import 'react-quill/dist/quill.snow.css';
 
 const Templates = () => {
@@ -21,8 +22,13 @@ const Templates = () => {
   const [editorContent, setEditorContent] = useState('');
   const quillRef = useRef(null);
 
+  const FONT_SIZE_WHITELIST = React.useMemo(() => ['8px', '10px', '12px', '14px', '18px', '24px', '36px'], []);
+  const Size = Quill.import('attributors/style/size');
+  Size.whitelist = FONT_SIZE_WHITELIST;
+  Quill.register(Size, true);
+
   // 富文本编辑器图片上传处理
-  const imageHandler = () => {
+  const imageHandler = useCallback(() => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'image/*');
@@ -55,13 +61,13 @@ const Templates = () => {
         }
       }
     };
-  };
+  }, []);
 
   // 富文本编辑器配置 - 使用 useMemo 避免重复创建
   const modules = React.useMemo(() => ({
     toolbar: {
       container: [
-        [{ 'size': ['small', false, 'large', 'huge'] }],
+        [{ 'size': FONT_SIZE_WHITELIST }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'color': [] }, { 'background': [] }],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
@@ -73,7 +79,7 @@ const Templates = () => {
         image: imageHandler
       }
     }
-  }), []);
+  }), [imageHandler, FONT_SIZE_WHITELIST]);
 
   const formats = [
     'size',
@@ -171,14 +177,10 @@ attachments.forEach(file => {
 });
       
       if (editingTemplate) {
-        await axios.put(`/api/templates/${editingTemplate.id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await axios.put(`/api/templates/${editingTemplate.id}`, formData);
         message.success('更新成功');
       } else {
-        await axios.post('/api/templates', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await axios.post('/api/templates', formData);
         message.success('添加成功');
       }
       setModalVisible(false);

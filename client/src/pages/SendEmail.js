@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card, Button, Table, Modal, Select, message, Space, Tag, Row, Col, Spin
+  Card, Button, Table, Modal, Select, message, Space, Tag, Row, Col, Spin, Input
 } from 'antd';
 import { EyeOutlined, SendOutlined } from '@ant-design/icons';
 import axios from 'axios';
@@ -16,16 +16,23 @@ const SendEmail = () => {
   const [previewList, setPreviewList] = useState([]);
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [groups, setGroups] = useState([]);
 
   useEffect(() => {
-    fetchCustomers();
+    fetchCustomers(selectedGroup);
     fetchTemplates();
-  }, []);
+    fetchGroups();
+  }, [searchText, selectedGroup]);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (group_id = selectedGroup) => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/customers');
+      const params = {};
+      if (searchText) params.search = searchText;
+      if (group_id) params.group_id = group_id;
+      const response = await axios.get('/api/customers', { params });
       setCustomers(response.data.data || []);
     } catch (error) {
       message.error('获取联系人列表失败');
@@ -40,6 +47,15 @@ const SendEmail = () => {
       setTemplates(response.data.data || []);
     } catch (error) {
       message.error('获取模板列表失败');
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const response = await axios.get('/api/groups');
+      setGroups([{ id: null, name: '未分组' }, ...(response.data.data || [])]);
+    } catch (error) {
+      // ignore
     }
   };
 
@@ -140,7 +156,8 @@ const SendEmail = () => {
       </div>
 
       <Card className="content-card" style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
+        {/* 第一行：模板选择 + 预览/发送 */}
+        <Row gutter={16} align="middle" style={{ marginBottom: 20 }}>
           <Col span={8}>
             <Select
               placeholder="请选择邮件模板"
@@ -179,6 +196,44 @@ const SendEmail = () => {
       </Card>
 
       <Card className="content-card">
+        {/* 联系人列表顶部工具条：搜索/分组筛选/选择/清空 */}
+        <Row gutter={16} align="middle" style={{ marginBottom: 12 }}>
+          <Col span={8}>
+            <Input.Search
+              placeholder="搜索姓名/邮箱/公司"
+              allowClear
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              onSearch={value => setSearchText(value)}
+            />
+          </Col>
+          <Col span={8}>
+            <Select
+              placeholder="筛选分组"
+              style={{ width: '100%' }}
+              value={selectedGroup}
+              onChange={val => setSelectedGroup(val)}
+              allowClear
+            >
+              {groups.map(g => (
+                <Option key={String(g.id)} value={g.id}>{g.name}</Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={8}>
+            <Space>
+              <Button
+                onClick={() => {
+                  const ids = customers.filter(c => c.status === 'active').map(c => c.id);
+                  setSelectedCustomerIds(ids);
+                }}
+              >
+                选中当前筛选的活跃联系人
+              </Button>
+              <Button onClick={() => setSelectedCustomerIds([])}>清空选择</Button>
+            </Space>
+          </Col>
+        </Row>
         <Table
           rowSelection={{
             selectedRowKeys: selectedCustomerIds,

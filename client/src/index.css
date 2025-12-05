@@ -109,4 +109,35 @@ code {
 .preview-content {
   word-wrap: break-word;
   overflow-wrap: break-word;
-} 
+}
+
+/* 编辑器与预览统一段落间距 */
+.ql-editor p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+/* Quill 字体大小下拉显示数字 */
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="8px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="8px"]::before { content: '8'; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before { content: '10'; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before { content: '12'; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before { content: '14'; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before { content: '18'; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before { content: '24'; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="36px"]::before { content: '36'; }
+
+/* 预览下拉条目本身以对应字号呈现，便于直观选择 */
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="8px"] { font-size: 8px; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"] { font-size: 10px; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"] { font-size: 12px; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"] { font-size: 14px; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"] { font-size: 18px; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"] { font-size: 24px; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="36px"] { font-size: 36px; }
