@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 // 保存邮箱设置
 router.post('/', async (req, res) => {
   try {
-    const { smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure } = req.body;
+    const { smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure, default_cc } = req.body;
     
     // 验证必填字段
     if (!smtp_host || !smtp_port || !email || !username || !password) {
@@ -34,17 +34,17 @@ router.post('/', async (req, res) => {
       await dbOperations.run(
         `UPDATE email_settings SET 
          smtp_host = ?, smtp_port = ?, pop_host = ?, pop_port = ?, 
-         email = ?, username = ?, password = ?, secure = ?, 
+         email = ?, username = ?, password = ?, secure = ?, default_cc = ?, 
          updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-        [smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure, existing.id]
+        [smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure, default_cc || null, existing.id]
       );
     } else {
       // 创建新设置
       await dbOperations.run(
         `INSERT INTO email_settings 
-         (smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure]
+         (smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure, default_cc) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [smtp_host, smtp_port, pop_host, pop_port, email, username, password, secure, default_cc || null]
       );
     }
 

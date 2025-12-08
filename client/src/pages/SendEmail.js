@@ -19,12 +19,24 @@ const SendEmail = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groups, setGroups] = useState([]);
+  const [defaultCc, setDefaultCc] = useState('');
 
   useEffect(() => {
     fetchCustomers(selectedGroup);
     fetchTemplates();
     fetchGroups();
   }, [searchText, selectedGroup]);
+
+  useEffect(() => {
+    const fetchDefaultCc = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        const cc = res.data?.data?.default_cc || '';
+        setDefaultCc(cc);
+      } catch (e) {}
+    };
+    fetchDefaultCc();
+  }, []);
 
   const fetchCustomers = async (group_id = selectedGroup) => {
     setLoading(true);
@@ -95,7 +107,8 @@ const SendEmail = () => {
     try {
       const res = await axios.post('/api/email/send', {
         customerIds: selectedCustomerIds,
-        templateId: selectedTemplateId
+        templateId: selectedTemplateId,
+        overrideCc: defaultCc
       });
       
       const { total, success, failed } = res.data.data;
@@ -172,27 +185,34 @@ const SendEmail = () => {
             </Select>
           </Col>
           <Col span={16}>
-            <Space>
-              <Button
-                type="primary"
-                icon={<EyeOutlined />}
-                onClick={handlePreview}
-                disabled={!selectedTemplateId || selectedCustomerIds.length === 0}
-              >
-                预览邮件
-              </Button>
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                onClick={handleSend}
-                loading={sending}
-                disabled={!selectedTemplateId || selectedCustomerIds.length === 0}
-              >
-                批量发送
-              </Button>
-            </Space>
-          </Col>
-        </Row>
+          <Space>
+            <Button
+              type="primary"
+              icon={<EyeOutlined />}
+              onClick={handlePreview}
+              disabled={!selectedTemplateId || selectedCustomerIds.length === 0}
+            >
+              预览邮件
+            </Button>
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
+              onClick={handleSend}
+              loading={sending}
+              disabled={!selectedTemplateId || selectedCustomerIds.length === 0}
+            >
+              批量发送
+            </Button>
+            <Input
+              style={{ width: 360 }}
+              placeholder="默认抄送（多个邮箱用逗号或分号分隔）"
+              value={defaultCc}
+              onChange={e => setDefaultCc(e.target.value)}
+              allowClear
+            />
+          </Space>
+        </Col>
+      </Row>
       </Card>
 
       <Card className="content-card">

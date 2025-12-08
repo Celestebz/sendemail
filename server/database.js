@@ -70,6 +70,7 @@ async function initDatabase() {
       username TEXT NOT NULL,
       password TEXT NOT NULL,
       secure BOOLEAN DEFAULT 1,
+      default_cc TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
@@ -115,6 +116,7 @@ async function initDatabase() {
       email_content TEXT NOT NULL,
       status TEXT DEFAULT 'pending',
       error_message TEXT,
+      cc_list TEXT,
       sent_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (customer_id) REFERENCES customers (id),
@@ -173,6 +175,20 @@ async function initDatabase() {
         "UPDATE customers SET first_name = ?, last_name = ? WHERE id = ?",
         [firstName, lastName, customer.id]
       );
+    }
+
+    // 给邮箱设置表增加 default_cc 字段（如果没有）
+    let emailSettingColumns = await dbOperations.query("PRAGMA table_info(email_settings)");
+    if (!Array.isArray(emailSettingColumns)) emailSettingColumns = [];
+    if (!emailSettingColumns.some(col => col.name === 'default_cc')) {
+      await dbOperations.run("ALTER TABLE email_settings ADD COLUMN default_cc TEXT");
+    }
+
+    // 给发送记录表增加 cc_list 字段（如果没有）
+    let sendRecordColumns = await dbOperations.query("PRAGMA table_info(send_records)");
+    if (!Array.isArray(sendRecordColumns)) sendRecordColumns = [];
+    if (!sendRecordColumns.some(col => col.name === 'cc_list')) {
+      await dbOperations.run("ALTER TABLE send_records ADD COLUMN cc_list TEXT");
     }
 
     console.log('✅ 数据库表初始化完成');

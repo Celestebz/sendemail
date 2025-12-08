@@ -56,7 +56,7 @@ function convertImagesToBase64(htmlContent, baseDir) {
 // 发送邮件
 router.post('/send', async (req, res) => {
   try {
-    const { customerIds, templateId, customSubject, customContent } = req.body;
+    const { customerIds, templateId, customSubject, customContent, overrideCc } = req.body;
     
     // 获取邮箱设置
     const emailSettings = await dbOperations.get('SELECT * FROM email_settings LIMIT 1');
@@ -85,6 +85,18 @@ router.post('/send', async (req, res) => {
     if (customers.length === 0) {
       return res.status(400).json({ success: false, error: '未找到客户' });
     }
+
+    // 解析默认抄送列表
+    const parseCc = (text) => {
+      if (!text || typeof text !== 'string') return [];
+      return text
+        .split(/[,;\n]/)
+        .map(s => s.trim())
+        .filter(s => s);
+    };
+    const defaultCcList = parseCc(emailSettings.default_cc);
+    const overrideCcList = parseCc(overrideCc);
+    const finalCcList = overrideCcList.length ? overrideCcList : defaultCcList;
 
     // 创建邮件传输器
     const transporter = nodemailer.createTransport({
@@ -160,6 +172,7 @@ router.post('/send', async (req, res) => {
         await transporter.sendMail({
           from: emailSettings.email,
           to: customer.email,
+          cc: finalCcList.length ? finalCcList.join(',') : undefined,
           subject: subject,
           html: content,
           attachments: attachments
@@ -168,9 +181,9 @@ router.post('/send', async (req, res) => {
         // 记录发送成功
         await dbOperations.run(
           `INSERT INTO send_records 
-           (customer_id, template_id, email_subject, email_content, status, sent_at) 
-           VALUES (?, ?, ?, ?, 'success', datetime('now', 'localtime'))`,
-          [customer.id, templateId, subject, content]
+           (customer_id, template_id, email_subject, email_content, status, cc_list, sent_at) 
+           VALUES (?, ?, ?, ?, 'success', ?, datetime('now', 'localtime'))`,
+          [customer.id, templateId, subject, content, finalCcList.join(',') || null]
         );
 
         results.success++;
@@ -185,11 +198,11 @@ router.post('/send', async (req, res) => {
           || '（无内容）';
         await dbOperations.run(
           `INSERT INTO send_records 
-           (customer_id, template_id, email_subject, email_content, status, error_message, sent_at) 
-           VALUES (?, ?, ?, ?, 'failed', ?, datetime('now', 'localtime'))`,
-          [customer.id, templateId, safeSubject, safeContent, error.message]
+           (customer_id, template_id, email_subject, email_content, status, error_message, cc_list, sent_at) 
+           VALUES (?, ?, ?, ?, 'failed', ?, ?, datetime('now', 'localtime'))`,
+          [customer.id, templateId, safeSubject, safeContent, error.message, finalCcList.join(',') || null]
         );
-
+  
         results.failed++;
         results.errors.push({
           customer: customer.name,
