@@ -27,6 +27,7 @@ const Templates = () => {
   Size.whitelist = FONT_SIZE_WHITELIST;
   Quill.register(Size, true);
 
+
   // 富文本编辑器图片上传处理
   const imageHandler = useCallback(() => {
     const input = document.createElement('input');
@@ -62,6 +63,7 @@ const Templates = () => {
       }
     };
   }, []);
+
 
   // 富文本编辑器配置 - 使用 useMemo 避免重复创建
   const modules = React.useMemo(() => ({

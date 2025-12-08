@@ -321,12 +321,18 @@ router.post('/import', upload.single('file'), async (req, res) => {
     // 打印调试信息
     console.log('导入解析结果:', customers);
 
-    // 检查字段名
-    if (customers.length > 0 && (!('姓名' in customers[0]) || !('邮箱' in customers[0]))) {
-      return res.status(400).json({
-        success: false,
-        error: '导入文件缺少"姓名"或"邮箱"表头，请检查表头是否为中文且无多余空格。'
-      });
+    // 检查字段名：允许 "姓名" 或拆分的 "名字"+"姓氏"
+    if (customers.length > 0) {
+      const header = customers[0];
+      const hasFullNameHeader = ('姓名' in header);
+      const hasSplitNameHeader = ('名字' in header) && ('姓氏' in header);
+      const hasEmailHeader = ('邮箱' in header);
+      if ((!hasFullNameHeader && !hasSplitNameHeader) || !hasEmailHeader) {
+        return res.status(400).json({
+          success: false,
+          error: '导入文件缺少姓名相关或邮箱表头。请使用“姓名, 邮箱”或“名字, 姓氏, 邮箱”中文表头（无空格）。'
+        });
+      }
     }
 
     // 验证和插入数据
@@ -336,13 +342,35 @@ router.post('/import', upload.single('file'), async (req, res) => {
 
     for (const customer of customers) {
       try {
-        const { 姓名: name, 邮箱: email, 公司: company, 电话: phone, 分组: group_name, 备注: notes } = customer;
+        const { 姓名: name, 名字: first_name_from_file, 姓氏: last_name_from_file, 邮箱: email, 公司: company, 电话: phone, 分组: group_name, 备注: notes } = customer;
+        
+        // 计算 first_name / last_name
+        let finalFirstName = first_name_from_file || '';
+        let finalLastName = last_name_from_file || '';
+        let finalName = name || '';
+        if (!finalName && (finalFirstName || finalLastName)) {
+          finalName = [finalFirstName, finalLastName].filter(Boolean).join(' ').trim();
+        }
+        if (!finalFirstName || !finalLastName) {
+          const baseName = finalName || '';
+          if (baseName) {
+            if (baseName.includes(' ')) {
+              const parts = baseName.trim().split(/\s+/);
+              if (!finalLastName) finalLastName = parts[parts.length - 1] || '';
+              if (!finalFirstName) finalFirstName = parts.slice(0, -1).join(' ') || parts[0] || '';
+            } else {
+              // 中文：第一个字符为姓氏，其余为名字
+              if (!finalLastName) finalLastName = baseName.charAt(0) || '';
+              if (!finalFirstName) finalFirstName = baseName.slice(1) || '';
+            }
+          }
+        }
         // 宽松判断空行，只要姓名或邮箱有值就导入
-        if (!name && !email) {
+        if (!finalName && !email) {
           continue;
         }
 
-        if (!name || !email) {
+        if (!finalName || !email) {
           errorCount++;
           errors.push(`行 ${customers.indexOf(customer) + 1}: 姓名和邮箱为必填字段`);
           continue;
@@ -372,9 +400,9 @@ router.post('/import', upload.single('file'), async (req, res) => {
         }
 
         await dbOperations.run(
-          `INSERT INTO customers (name, email, company, phone, group_id, notes) 
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [name, email, company, phone, group_id, notes]
+          `INSERT INTO customers (name, first_name, last_name, email, company, phone, group_id, notes) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [finalName, finalFirstName, finalLastName, email, company, phone, group_id, notes]
         );
         
         successCount++;
