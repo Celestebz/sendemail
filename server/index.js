@@ -67,7 +67,15 @@ const getClientBuildPath = () => {
     // 打包环境：exe 所在目录的 client_build
     // 注意：在 Windows 上 process.execPath 是 .exe 文件的完整路径
     // 使用 path.resolve 确保路径格式正确
-    return path.resolve(path.dirname(process.execPath), 'client_build');
+    
+    // 优先检查 exe 旁边的 client_build 目录
+    const exeDir = path.dirname(process.execPath);
+    const buildPath = path.resolve(exeDir, 'client_build');
+    
+    // 调试日志
+    console.log(`🔍 正在检查前端路径: ${buildPath}`);
+    
+    return buildPath;
   } else {
     // 开发环境：项目的 client/build
     return path.join(__dirname, '..', 'client', 'build');

@@ -157,8 +157,15 @@ const Templates = () => {
     
     // 只有当内容是纯文本（没有HTML标签）时，才手动把换行符 \n 转换成 <p> 标签
     // 如果已经是 HTML 格式（包含了 <p>, <div>, <br> 等），就不要动它，否则会破坏原有的 HTML 结构（比如段落丢失）
+    // 注意：Quill 编辑器生成的空行通常是 <p><br></p>，这也被视为 HTML，所以不会被这里误处理
     if (content && content.includes('\n') && !/<\/?(p|div|br|span|h[1-6]|ul|ol|li)[^>]*>/i.test(content)) {
       content = content.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('');
+    }
+    
+    // 修复：确保所有空段落 <p></p> 被转换为 <p><br></p>，防止高度塌陷
+    // 有时候 Quill 保存的内容可能包含空的 p 标签
+    if (content) {
+      content = content.replace(/<p>\s*<\/p>/g, '<p><br></p>');
     }
     
     setEditorContent(content);
