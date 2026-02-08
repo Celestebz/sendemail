@@ -20,6 +20,35 @@ if %errorlevel% neq 0 (
     exit
 )
 
+:: 检查是否需要安装依赖 (检查根目录、server目录、client目录)
+if not exist "node_modules" (
+    goto :InstallDependencies
+)
+if not exist "server\node_modules" (
+    goto :InstallDependencies
+)
+if not exist "client\node_modules" (
+    goto :InstallDependencies
+)
+
+goto :StartService
+
+:InstallDependencies
+echo [提示] 检测到是第一次运行（或缺少依赖库），正在自动执行安装...
+echo        这通常需要几分钟时间，请耐心等待。
+echo.
+call npm run install-all
+if %errorlevel% neq 0 (
+    echo.
+    echo [错误] 依赖安装失败，请检查网络设置。
+    pause
+    exit
+)
+echo.
+echo [成功] 依赖安装完成！
+echo.
+
+:StartService
 :: 启动服务
 echo 正在启动服务，请稍候...
 echo 启动成功后会自动打开浏览器。
