@@ -27,6 +27,25 @@ const Templates = () => {
   Size.whitelist = FONT_SIZE_WHITELIST;
   Quill.register(Size, true);
 
+  // 自定义 clean 处理
+  const cleanHandler = useCallback(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      const range = quill.getSelection();
+      if (range) {
+        if (range.length > 0) {
+          // 清除选区格式
+          quill.removeFormat(range.index, range.length);
+          // 重新应用默认字体大小 (14px)
+          quill.formatText(range.index, range.length, 'size', '14px');
+        } else {
+          // 如果没有选区，清除光标处格式
+          quill.removeFormat(range.index, 0);
+          quill.format('size', '14px');
+        }
+      }
+    }
+  }, []);
 
   // 富文本编辑器图片上传处理
   const imageHandler = useCallback(() => {
@@ -122,7 +141,15 @@ const Templates = () => {
       name: record.name,
       subject: record.subject
     });
-    setEditorContent(record.content || '');
+    
+    // 处理内容中的换行符：如果看起来是纯文本（没有HTML段落或换行标签），将换行符转换为HTML段落
+    let content = record.content || '';
+    // 检查是否包含换行符，且不包含 <p>, <div>, <br> 标签
+    if (content && content.includes('\n') && !/<\/?(p|div|br)[^>]*>/i.test(content)) {
+      content = content.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('');
+    }
+    
+    setEditorContent(content);
     setAttachments(
       record.attachments
         ? JSON.parse(record.attachments).map((file, idx) => ({

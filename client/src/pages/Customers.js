@@ -158,6 +158,27 @@ const Customers = () => {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await axios.get('/api/customers/template/download', {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'contact_template.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      message.success('模板下载成功');
+    } catch (error) {
+      message.error('模板下载失败');
+    }
+  };
+
   const handleAddGroup = async () => {
     if (!groupModal.name.trim()) return message.warning('分组名称不能为空');
     await axios.post('/api/groups', { name: groupModal.name });
@@ -347,14 +368,14 @@ const Customers = () => {
           {/* 操作栏 */}
           <div style={{ marginBottom: 16, background: '#fafafa', padding: 16, borderRadius: 8 }}>
             <Row gutter={16} align="middle">
-              <Col span={6}>
+              <Col span={5}>
                 <Input.Search
-                  placeholder="搜索联系人姓名、邮箱或公司"
+                  placeholder="搜索联系人..."
                   onSearch={setSearchText}
                   allowClear
                 />
               </Col>
-              <Col span={4}>
+              <Col span={3}>
                 <Select
                   placeholder="选择分组"
                   allowClear
@@ -366,7 +387,7 @@ const Customers = () => {
                   ))}
                 </Select>
               </Col>
-              <Col span={4}>
+              <Col span={3}>
                 <Select
                   placeholder="选择状态"
                   allowClear
@@ -377,7 +398,7 @@ const Customers = () => {
                   <Option value="inactive">非活跃</Option>
                 </Select>
               </Col>
-              <Col span={10}>
+              <Col span={13}>
                 <Space>
                   <Button
                     type="primary"
@@ -400,6 +421,12 @@ const Customers = () => {
                     onClick={handleExport}
                   >
                     导出联系人
+                  </Button>
+                  <Button
+                    icon={<DownloadOutlined />}
+                    onClick={handleDownloadTemplate}
+                  >
+                    下载模板
                   </Button>
                 </Space>
               </Col>

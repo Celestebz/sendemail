@@ -5,18 +5,30 @@ const multer = require('multer');
 const xlsx = require('xlsx');
 const csv = require('csv-parser');
 const fs = require('fs');
+const path = require('path');
+
+// 获取上传目录路径（与 index.js 和 database.js 保持一致）
+const getDataDir = () => {
+  if (process.pkg) {
+    return path.join(path.dirname(process.execPath), 'data');
+  } else {
+    return path.join(__dirname, '..', '..', 'data');
+  }
+};
+
+const uploadsDir = path.join(getDataDir(), 'uploads');
 
 // 配置文件上传
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
@@ -452,8 +464,45 @@ router.get('/export/csv', async (req, res) => {
     ].join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=customers.csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=contacts.csv');
     res.send(csvContent);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 导出模板
+router.get('/template/download', async (req, res) => {
+  try {
+    const workbook = xlsx.utils.book_new();
+    const headers = [
+      ['名字', '姓氏', '邮箱', '公司', '电话', '分组', '备注']
+    ];
+    const examples = [
+      ['John', 'Smith', 'john@example.com', 'Example Corp', '123456789', 'VIP客户', '这是一个示例'],
+      ['李', '四', 'lisi@example.com', '测试公司', '13800138000', '潜在客户', ''],
+    ];
+
+    const worksheet = xlsx.utils.aoa_to_sheet([...headers, ...examples]);
+    
+    // 设置列宽
+    worksheet['!cols'] = [
+      { wch: 15 }, // 名字
+      { wch: 15 }, // 姓氏
+      { wch: 25 }, // 邮箱
+      { wch: 20 }, // 公司
+      { wch: 15 }, // 电话
+      { wch: 15 }, // 分组
+      { wch: 30 }  // 备注
+    ];
+
+    xlsx.utils.book_append_sheet(workbook, worksheet, '导入模板');
+
+    const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=contact_template.xlsx');
+    res.send(buffer);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

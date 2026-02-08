@@ -4,10 +4,22 @@ const { dbOperations } = require('../database');
 const multer = require('multer');
 const path = require('path');
 
+// 获取上传目录路径（与 index.js 和 database.js 保持一致）
+const getDataDir = () => {
+  if (process.pkg) {
+    return path.join(path.dirname(process.execPath), 'data');
+  } else {
+    return path.join(__dirname, '..', '..', 'data');
+  }
+};
+
+const uploadsDir = path.join(getDataDir(), 'uploads');
+const imagesDir = path.join(uploadsDir, 'images');
+
 // 配置文件上传
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
@@ -25,7 +37,7 @@ const upload = multer({
 // 配置图片上传（用于富文本编辑器）
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/images/');
+    cb(null, imagesDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

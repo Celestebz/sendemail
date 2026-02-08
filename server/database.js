@@ -1,8 +1,29 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-// 数据库文件路径
-const dbPath = path.join(__dirname, 'database.sqlite');
+// 数据库文件路径 - 使用可执行文件所在目录的 data 文件夹
+// 如果是打包后的exe，使用exe所在目录；否则使用项目根目录
+const getDataDir = () => {
+  // 判断是否在 pkg 打包环境中
+  if (process.pkg) {
+    // 打包后：使用 exe 所在目录的 data 文件夹
+    return path.join(path.dirname(process.execPath), 'data');
+  } else {
+    // 开发环境：使用项目根目录的 data 文件夹
+    return path.join(__dirname, '..', 'data');
+  }
+};
+
+const dataDir = getDataDir();
+
+// 确保 data 目录存在
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+  console.log(`✅ 创建数据目录: ${dataDir}`);
+}
+
+const dbPath = path.join(dataDir, 'database.sqlite');
 
 // 数据库操作封装（提前定义，供初始化使用）
 const dbOperations = {
@@ -114,9 +135,9 @@ async function initDatabase() {
       template_id INTEGER NOT NULL,
       email_subject TEXT NOT NULL,
       email_content TEXT NOT NULL,
+      cc_list TEXT,
       status TEXT DEFAULT 'pending',
       error_message TEXT,
-      cc_list TEXT,
       sent_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (customer_id) REFERENCES customers (id),
@@ -177,18 +198,20 @@ async function initDatabase() {
       );
     }
 
-    // 给邮箱设置表增加 default_cc 字段（如果没有）
-    let emailSettingColumns = await dbOperations.query("PRAGMA table_info(email_settings)");
-    if (!Array.isArray(emailSettingColumns)) emailSettingColumns = [];
-    if (!emailSettingColumns.some(col => col.name === 'default_cc')) {
+    // 给 email_settings 表增加 default_cc 字段（如果没有）
+    let emailSettingsColumns = await dbOperations.query("PRAGMA table_info(email_settings)");
+    if (!Array.isArray(emailSettingsColumns)) emailSettingsColumns = [];
+    if (!emailSettingsColumns.some(col => col.name === 'default_cc')) {
       await dbOperations.run("ALTER TABLE email_settings ADD COLUMN default_cc TEXT");
+      console.log('✅ 已添加 default_cc 字段到 email_settings 表');
     }
 
-    // 给发送记录表增加 cc_list 字段（如果没有）
-    let sendRecordColumns = await dbOperations.query("PRAGMA table_info(send_records)");
-    if (!Array.isArray(sendRecordColumns)) sendRecordColumns = [];
-    if (!sendRecordColumns.some(col => col.name === 'cc_list')) {
+    // 给 send_records 表增加 cc_list 字段（如果没有）
+    let sendRecordsColumns = await dbOperations.query("PRAGMA table_info(send_records)");
+    if (!Array.isArray(sendRecordsColumns)) sendRecordsColumns = [];
+    if (!sendRecordsColumns.some(col => col.name === 'cc_list')) {
       await dbOperations.run("ALTER TABLE send_records ADD COLUMN cc_list TEXT");
+      console.log('✅ 已添加 cc_list 字段到 send_records 表');
     }
 
     console.log('✅ 数据库表初始化完成');

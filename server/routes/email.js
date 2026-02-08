@@ -7,12 +7,22 @@ const { dbOperations } = require('../database');
 
 const router = express.Router();
 
-// 将HTML中的图片路径转换为base64内嵌格式
-function convertImagesToBase64(htmlContent, baseDir) {
-  // 匹配所有img标签的src属性
+// 获取数据目录路径（与其他文件保持一致）
+const getDataDir = () => {
+  if (process.pkg) {
+    return path.join(path.dirname(process.execPath), 'data');
+  } else {
+    return path.join(__dirname, '..', '..', 'data');
+  }
+};
+
+// 将HTML中的图片转换为CID附件（更可靠的方式）
+function convertImagesToCid(htmlContent, baseDir) {
   const imgRegex = /<img[^>]+src="([^">]+)"/g;
   let match;
   let result = htmlContent;
+  const attachments = [];
+  let cidCounter = 0;
 
   while ((match = imgRegex.exec(htmlContent)) !== null) {
     const imgPath = match[1];
@@ -25,32 +35,30 @@ function convertImagesToBase64(htmlContent, baseDir) {
 
         // 检查文件是否存在
         if (fs.existsSync(fullPath)) {
-          // 读取文件并转换为base64
-          const imageBuffer = fs.readFileSync(fullPath);
-          const base64Image = imageBuffer.toString('base64');
+          // 生成唯一的CID
+          const cid = `image${cidCounter++}@sendemail`;
 
-          // 获取文件扩展名来确定MIME类型
-          const ext = path.extname(fullPath).toLowerCase();
-          const mimeTypes = {
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-            '.gif': 'image/gif',
-            '.webp': 'image/webp'
-          };
-          const mimeType = mimeTypes[ext] || 'image/jpeg';
+          // 添加到附件列表
+          attachments.push({
+            filename: path.basename(fullPath),
+            path: fullPath,
+            cid: cid
+          });
 
-          // 替换为base64格式
-          const base64Src = `data:${mimeType};base64,${base64Image}`;
-          result = result.replace(imgPath, base64Src);
+          // 替换HTML中的图片路径为cid引用
+          result = result.replace(imgPath, `cid:${cid}`);
+
+          console.log(`✅ 图片转换成功: ${imgPath} -> cid:${cid}`);
+        } else {
+          console.warn(`⚠️  图片文件不存在: ${fullPath}`);
         }
       } catch (error) {
-        console.error('转换图片失败:', imgPath, error.message);
+        console.error('❌ 转换图片失败:', imgPath, error.message);
       }
     }
   }
 
-  return result;
+  return { html: result, attachments };
 }
 
 // 发送邮件
@@ -90,7 +98,7 @@ router.post('/send', async (req, res) => {
     const parseCc = (text) => {
       if (!text || typeof text !== 'string') return [];
       return text
-        .split(/[,;\n]/)
+        .split(/[,;\n，；]/)
         .map(s => s.trim())
         .filter(s => s);
     };
@@ -155,17 +163,19 @@ router.post('/send', async (req, res) => {
         };
         content = normalizeParagraphs(content);
 
-        // 将HTML中的图片转换为base64格式
-        content = convertImagesToBase64(content, path.join(__dirname, '..'));
+        // 将HTML中的图片转换为CID附件
+        const { html: processedContent, attachments: imageAttachments } = convertImagesToCid(content, getDataDir());
+        content = processedContent;
 
-        // 处理附件
-        let attachments = [];
+        // 处理模板附件
+        let attachments = [...imageAttachments]; // 先添加图片附件
         if (template.attachments) {
           const attachmentFiles = JSON.parse(template.attachments);
-          attachments = attachmentFiles.map(file => ({
+          const fileAttachments = attachmentFiles.map(file => ({
             filename: file.filename,
             path: file.path
           }));
+          attachments = [...attachments, ...fileAttachments]; // 合并图片和文件附件
         }
 
         // 发送邮件

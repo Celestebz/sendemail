@@ -2,7 +2,7 @@
   "name": "batch-email-sender",
   "version": "1.0.0",
   "description": "批量发推广信工具",
-  "main": "server/index.js",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
@@ -19,6 +19,32 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "pkg": "^5.8.1"
+    "pkg": "^5.8.1",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.9.3"
+  },
+  "build": {
+    "appId": "com.sendemail.app",
+    "productName": "SendEmail",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**",
+      "server/**",
+      "client/build/**",
+      "package.json"
+    ]
+  },
+  "pkg": {
+    "assets": [
+      "client/build/**/*",
+      "server/routes/**/*",
+      "node_modules/sqlite3/**/*"
+    ],
+    "scripts": [
+      "server/**/*.js"
+    ],
+    "outputPath": "dist"
   }
 }

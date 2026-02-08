@@ -83,7 +83,7 @@ function App() {
       <Layout>
         <Header style={{ padding: 0, background: '#fff' }}>
           <div style={{ padding: '0 24px', fontSize: '18px', fontWeight: 'bold' }}>
-            批量发推广信工具
+            批量发邮件工具
           </div>
         </Header>
         <Content style={{ margin: '0 16px' }}>
