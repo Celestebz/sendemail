@@ -65,7 +65,9 @@ app.get('/api/health', (req, res) => {
 const getClientBuildPath = () => {
   if (process.pkg) {
     // 打包环境：exe 所在目录的 client_build
-    return path.join(path.dirname(process.execPath), 'client_build');
+    // 注意：在 Windows 上 process.execPath 是 .exe 文件的完整路径
+    // 使用 path.resolve 确保路径格式正确
+    return path.resolve(path.dirname(process.execPath), 'client_build');
   } else {
     // 开发环境：项目的 client/build
     return path.join(__dirname, '..', 'client', 'build');

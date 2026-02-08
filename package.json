@@ -39,8 +39,7 @@
   "pkg": {
     "assets": [
       "client/build/**/*",
-      "server/routes/**/*",
-      "node_modules/sqlite3/**/*"
+      "server/routes/**/*"
     ],
     "scripts": [
       "server/**/*.js"
