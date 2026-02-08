@@ -357,7 +357,11 @@ attachments.forEach(file => {
           </Form.Item>
           <Form.Item
             label="正文内容"
-            extra="可用变量：{{联系人姓氏}}、{{联系人名字}}、{{联系人姓名}}、{{公司名称}}、{{邮箱}}、{{电话}}"
+            extra={
+              <span style={{ color: 'rgba(0, 0, 0, 0.88)' }}>
+                可用变量：{`{{联系人姓氏}}、{{联系人名字}}、{{联系人姓名}}、{{公司名称}}、{{邮箱}}、{{电话}}`}
+              </span>
+            }
           >
             <div style={{ marginBottom: '80px' }}>
               <ReactQuill
