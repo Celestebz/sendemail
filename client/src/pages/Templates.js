@@ -165,7 +165,11 @@ const Templates = () => {
     // 修复：确保所有空段落 <p></p> 被转换为 <p><br></p>，防止高度塌陷
     // 有时候 Quill 保存的内容可能包含空的 p 标签
     if (content) {
+      // 1. 替换完全空的段落 <p></p>
       content = content.replace(/<p>\s*<\/p>/g, '<p><br></p>');
+      
+      // 2. 替换只包含空格的段落 (例如 <p> </p>)，这些在编辑时也会塌陷
+      content = content.replace(/<p>(\s|&nbsp;)+<\/p>/g, '<p><br></p>');
     }
     
     setEditorContent(content);
