@@ -32,17 +32,27 @@ const Templates = () => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
       const range = quill.getSelection();
+      
       if (range) {
+        // 1. 先清除格式
         if (range.length > 0) {
-          // 清除选区格式
           quill.removeFormat(range.index, range.length);
-          // 重新应用默认字体大小 (14px)
-          quill.formatText(range.index, range.length, 'size', '14px');
         } else {
-          // 如果没有选区，清除光标处格式
+          // 光标处清除格式
           quill.removeFormat(range.index, 0);
-          quill.format('size', '14px');
         }
+
+        // 2. 稍微延迟后强制应用 14px，并刷新选区
+        // 延迟是为了确保 removeFormat 已完成，且能触发工具栏状态更新
+        setTimeout(() => {
+          if (range.length > 0) {
+            quill.formatText(range.index, range.length, 'size', '14px');
+          } else {
+            quill.format('size', '14px');
+          }
+          // 重新设置选区以触发工具栏更新
+          quill.setSelection(range.index, range.length);
+        }, 10);
       }
     }
   }, []);
@@ -142,10 +152,12 @@ const Templates = () => {
       subject: record.subject
     });
     
-    // 处理内容中的换行符：如果看起来是纯文本（没有HTML段落或换行标签），将换行符转换为HTML段落
+    // 处理内容中的换行符
     let content = record.content || '';
-    // 检查是否包含换行符，且不包含 <p>, <div>, <br> 标签
-    if (content && content.includes('\n') && !/<\/?(p|div|br)[^>]*>/i.test(content)) {
+    
+    // 只有当内容是纯文本（没有HTML标签）时，才手动把换行符 \n 转换成 <p> 标签
+    // 如果已经是 HTML 格式（包含了 <p>, <div>, <br> 等），就不要动它，否则会破坏原有的 HTML 结构（比如段落丢失）
+    if (content && content.includes('\n') && !/<\/?(p|div|br|span|h[1-6]|ul|ol|li)[^>]*>/i.test(content)) {
       content = content.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('');
     }
     

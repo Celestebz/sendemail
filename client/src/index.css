@@ -97,13 +97,16 @@ code {
   max-width: 100%;
   height: auto;
   display: block;
-  margin: 10px 0;
-  border-radius: 4px;
+  margin: 0;
+  border-radius: 0;
 }
 
+/* 编辑器与预览统一段落间距 */
+.ql-editor p,
 .preview-content p {
-  margin: 8px 0;
+  margin: 0;
   line-height: 1.6;
+  min-height: 1em; /* 确保空行也有高度 */
 }
 
 .preview-content {
@@ -111,10 +114,15 @@ code {
   overflow-wrap: break-word;
 }
 
-/* 编辑器与预览统一段落间距 */
-.ql-editor p {
-  margin: 8px 0;
-  line-height: 1.6;
+/* 强制编辑器默认字体大小为 14px */
+.ql-editor {
+  font-size: 14px;
+}
+
+/* 让编辑器内的图片默认块级显示，避免行高导致的底部空隙 */
+.ql-editor img {
+  display: block;
+  margin: 0;
 }
 
 /* Quill 字体大小下拉显示数字 */
