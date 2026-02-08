@@ -109,6 +109,12 @@ code {
   min-height: 1em; /* 确保空行也有高度 */
 }
 
+/* 强制编辑器段落样式：空段落也必须有高度 */
+.ql-editor p:empty::before {
+  content: '\00a0'; /* 插入不换行空格 */
+  display: inline-block;
+}
+
 .preview-content {
   word-wrap: break-word;
   overflow-wrap: break-word;
