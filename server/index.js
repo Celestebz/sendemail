@@ -108,15 +108,21 @@ app.listen(PORT, () => {
   console.log(`🌐 访问地址: http://localhost:${PORT}`);
 
   // 自动打开浏览器
-  const url = `http://localhost:${PORT}`;
-  const start = process.platform === 'darwin' ? 'open' :
-                process.platform === 'win32' ? 'start' : 'xdg-open';
+  // 仅在打包环境下（process.pkg 为真）才自动打开浏览器
+  // 开发环境下（npm run dev），前端由 React 开发服务器（端口 3000）自动打开
+  if (process.pkg) {
+    const url = `http://localhost:${PORT}`;
+    const start = process.platform === 'darwin' ? 'open' :
+                  process.platform === 'win32' ? 'start' : 'xdg-open';
 
-  require('child_process').exec(`${start} ${url}`, (err) => {
-    if (err) {
-      console.log('⚠️  请手动打开浏览器访问:', url);
-    } else {
-      console.log('✅ 浏览器已自动打开');
-    }
-  });
+    require('child_process').exec(`${start} ${url}`, (err) => {
+      if (err) {
+        console.log('⚠️  请手动打开浏览器访问:', url);
+      } else {
+        console.log('✅ 浏览器已自动打开');
+      }
+    });
+  } else {
+    console.log('ℹ️  开发模式：跳过自动打开浏览器（请访问前端端口 3000）');
+  }
 }); 
